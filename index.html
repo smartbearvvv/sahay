@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sahay | Offline Clinic Triage</title>
+<style>
+:root{
+  --bg:#0b1613; --bg2:#0f2a24; --card:rgba(255,255,255,.05); --line:rgba(255,255,255,.10);
+  --text:#e9f3ef; --muted:#8fa8a0; --accent:#3ddc97;
+  --low:#3ddc97; --mid:#ffb84d; --high:#ff5d6c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);min-height:100vh;
+  background:radial-gradient(1200px 600px at 10% -10%,#17463b 0%,transparent 60%),
+             radial-gradient(900px 500px at 100% 10%,#1d3a52 0%,transparent 55%),var(--bg);
+  padding:28px 18px 60px;
+}
+.wrap{max-width:1120px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#3ddc97,#2aa7c9);display:grid;place-items:center;box-shadow:0 8px 30px rgba(61,220,151,.35)}
+.logo svg{width:24px;height:24px}
+h1{font-size:26px;letter-spacing:.3px}
+.tag{color:var(--muted);font-size:13px;margin-top:2px}
+.pill{font-size:12px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--card)}
+.pill b{color:var(--accent)}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;backdrop-filter:blur(10px)}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin-bottom:16px;font-weight:600}
+.presets{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.presets button{background:transparent;border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:999px;font-size:13px;cursor:pointer;transition:.2s}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+.field{margin-bottom:15px}
+.row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:14px}
+.row .val{font-variant-numeric:tabular-nums;font-weight:600}
+.row .val small{color:var(--muted);font-weight:400;margin-left:3px}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:99px;background:rgba(255,255,255,.12);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(61,220,151,.18);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--accent);cursor:pointer}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--line);border-radius:14px;cursor:pointer;font-size:14px;user-select:none;transition:.2s}
+.tog.on{border-color:var(--accent);background:rgba(61,220,151,.08)}
+.sw{width:36px;height:20px;border-radius:99px;background:rgba(255,255,255,.15);position:relative;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.2s}
+.tog.on .sw{background:var(--accent)}
+.tog.on .sw::after{left:19px}
+.result{display:flex;gap:20px;align-items:center;margin-bottom:18px}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .num b{font-size:30px;display:block;line-height:1}
+.ring .num span{font-size:11px;color:var(--muted);letter-spacing:1px}
+.level{font-size:26px;font-weight:700;margin-bottom:4px}
+.action{color:var(--muted);font-size:14px;line-height:1.45}
+.bars .b{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px}
+.bars .b span.n{width:60px;color:var(--muted)}
+.bars .b .t{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bars .b .t i{display:block;height:100%;border-radius:99px;transition:width .4s}
+.bars .b span.p{width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.sub{margin-top:20px;font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted);margin-bottom:10px}
+.path{list-style:none;position:relative;padding-left:18px}
+.path::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.path li{position:relative;font-size:13.5px;line-height:1.4;margin-bottom:9px;color:#cfe3dc}
+.path li::before{content:"";position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.path li.end::before{background:var(--c,var(--accent));box-shadow:0 0 12px var(--c,var(--accent))}
+.imp .b i{background:linear-gradient(90deg,#2aa7c9,#3ddc97)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:12px;border:1px solid var(--line);border-radius:14px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:11px;color:var(--muted)}
+.cm{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;margin-top:12px;font-size:12px;text-align:center}
+.cm div{padding:6px 4px;border-radius:8px;background:rgba(255,255,255,.04)}
+.cm .h{background:none;color:var(--muted)}
+.foot{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center}
+.foot b{color:#ffb84d}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#06231b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+      </div>
+      <div>
+        <h1>Sahay</h1>
+        <div class="tag">Offline clinic triage that shows its reasoning</div>
+      </div>
+    </div>
+    <div class="pill" id="trainPill">Training model...</div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Patient vitals</h2>
+      <div class="presets">
+        <button data-p="healthy">Healthy adult</button>
+        <button data-p="moderate">Moderate case</button>
+        <button data-p="critical">Critical case</button>
+      </div>
+      <div id="fields"></div>
+      <div class="toggles" id="toggles"></div>
+    </section>
+
+    <section class="card">
+      <h2>Triage result</h2>
+      <div class="result">
+        <div class="ring">
+          <svg width="132" height="132" viewBox="0 0 132 132">
+            <circle cx="66" cy="66" r="56" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+            <circle id="arc" cx="66" cy="66" r="56" fill="none" stroke="var(--low)" stroke-width="12" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transition:stroke-dashoffset .5s,stroke .3s"/>
+          </svg>
+          <div class="num"><div><b id="score">0</b><span>RISK</span></div></div>
+        </div>
+        <div>
+          <div class="level" id="level">-</div>
+          <div class="action" id="action"></div>
+        </div>
+      </div>
+
+      <div class="bars" id="probs"></div>
+
+      <div class="sub">Why the model decided this</div>
+      <ul class="path" id="path"></ul>
+
+      <div class="sub">What the model relies on most</div>
+      <div class="bars imp" id="imp"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:18px">
+    <h2>Model report card (held out test cases)</h2>
+    <div class="stats" id="stats"></div>
+    <div class="cm" id="cm"></div>
+  </section>
+
+  <div class="foot">
+    Runs fully in your browser. No server, no internet, no data leaves the device.<br>
+    <b>Prototype only.</b> Trained on synthetic cases built from NEWS2 style scoring rules. Not a medical device.
+  </div>
+</div>
+
+<script>
+// ML-START
+const FEATURES = [
+  {key:'age',   label:'Age',               unit:'yrs',  min:1,  max:100, step:1,   def:35},
+  {key:'temp',  label:'Temperature',       unit:'\u00B0C', min:34, max:41,  step:0.1, def:36.8},
+  {key:'hr',    label:'Heart rate',        unit:'bpm',  min:30, max:180, step:1,   def:76},
+  {key:'rr',    label:'Breathing rate',    unit:'/min', min:6,  max:40,  step:1,   def:16},
+  {key:'spo2',  label:'Oxygen saturation', unit:'%',    min:80, max:100, step:1,   def:98},
+  {key:'sbp',   label:'Systolic BP',       unit:'mmHg', min:60, max:220, step:1,   def:120},
+  {key:'alert', label:'Fully alert',       bool:true,   def:1},
+  {key:'chest', label:'Chest pain',        bool:true,   def:0}
+];
+const NF = FEATURES.length;
+const LEVELS = [
+  {name:'Low risk',    color:'#3ddc97', action:'Home care and routine monitoring. Advise return if symptoms worsen.'},
+  {name:'Medium risk', color:'#ffb84d', action:'Needs a clinician review today. Recheck vitals within the hour.'},
+  {name:'High risk',   color:'#ff5d6c', action:'Urgent. Refer to a hospital now and keep the patient monitored.'}
+];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+// Early warning style score (NEWS2 inspired) used to create labelled training cases.
+function earlyWarningScore(c){
+  let s=0;
+  const rr=c.rr; s+= rr<=8?3: rr<=11?1: rr<=20?0: rr<=24?2:3;
+  const o=c.spo2; s+= o<=91?3: o<=93?2: o<=95?1:0;
+  const b=c.sbp; s+= b<=90?3: b<=100?2: b<=110?1: b<=219?0:3;
+  const h=c.hr; s+= h<=40?3: h<=50?1: h<=90?0: h<=110?1: h<=130?2:3;
+  const t=c.temp; s+= t<=35?3: t<=36?1: t<=38?0: t<=39?1:2;
+  if(!c.alert) s+=3;
+  if(c.chest) s+=2;
+  if(c.age>=65) s+=1;
+  return s;
+}
+
+function makeDataset(n,seed){
+  const r=mulberry32(seed), X=[], y=[];
+  for(let i=0;i<n;i++){
+    const sev=Math.pow(r(),2.2);
+    const c={
+      age:  clamp(Math.round(5+r()*88),1,100),
+      temp: clamp(36.8+sev*2.4*(r()<0.8?1:-0.7)+gauss(r)*0.3,34,41),
+      hr:   clamp(Math.round(76+sev*58+gauss(r)*9),30,180),
+      rr:   clamp(Math.round(16+sev*14+gauss(r)*2),6,40),
+      spo2: clamp(Math.round(98-sev*12+gauss(r)*1.2),80,100),
+      sbp:  clamp(Math.round(120-sev*45+gauss(r)*12+(r()<0.08?55:0)),60,220),
+      alert:r()>sev*0.4?1:0,
+      chest:r()<0.04+sev*0.3?1:0
+    };
+    c.temp=Math.round(c.temp*10)/10;
+    const sc=earlyWarningScore(c);
+    let lab= sc<=3?0 : sc<=6?1 : 2;
+    if(r()<0.05) lab=clamp(lab+(r()<0.5?-1:1),0,2);
+    X.push(FEATURES.map(f=>c[f.key])); y.push(lab);
+  }
+  return {X,y};
+}
+
+function gini(c,n){let s=1;for(let k=0;k<3;k++){const p=c[k]/n;s-=p*p}return s}
+
+function buildTree(X,y,idx,depth,o,imp){
+  const counts=[0,0,0]; idx.forEach(i=>counts[y[i]]++);
+  const n=idx.length, g=gini(counts,n);
+  const leaf=()=>({leaf:true,counts,n});
+  if(depth>=o.maxDepth||n<o.minSplit||g===0) return leaf();
+  let best=null;
+  for(let f=0;f<NF;f++){
+    const v=idx.map(i=>[X[i][f],y[i]]).sort((a,b)=>a[0]-b[0]);
+    const L=[0,0,0], R=counts.slice();
+    for(let k=0;k<n-1;k++){
+      L[v[k][1]]++; R[v[k][1]]--;
+      if(v[k][0]===v[k+1][0]) continue;
+      const nl=k+1, nr=n-nl;
+      if(nl<o.minLeaf||nr<o.minLeaf) continue;
+      const sc=(nl*gini(L,nl)+nr*gini(R,nr))/n;
+      if(!best||sc<best.sc) best={f,thr:(v[k][0]+v[k+1][0])/2,sc};
+    }
+  }
+  if(!best||g-best.sc<1e-4) return leaf();
+  imp[best.f]+=n*(g-best.sc);
+  const li=[],ri=[];
+  idx.forEach(i=>(X[i][best.f]<=best.thr?li:ri).push(i));
+  return {f:best.f,thr:best.thr,counts,n,
+    left:buildTree(X,y,li,depth+1,o,imp),
+    right:buildTree(X,y,ri,depth+1,o,imp)};
+}
+
+function trainModel(){
+  const t0=(typeof performance!=='undefined'?performance.now():Date.now());
+  const {X,y}=makeDataset(3000,2026);
+  const cut=Math.floor(X.length*0.8);
+  const Xtr=X.slice(0,cut), ytr=y.slice(0,cut), Xte=X.slice(cut), yte=y.slice(cut);
+  const imp=new Array(NF).fill(0);
+  const tree=buildTree(Xtr,ytr,Xtr.map((_,i)=>i),0,{maxDepth:6,minSplit:30,minLeaf:12},imp);
+  const total=imp.reduce((a,b)=>a+b,0)||1;
+  const importance=imp.map(v=>v/total);
+  const cm=[[0,0,0],[0,0,0],[0,0,0]];
+  Xte.forEach((x,i)=>cm[yte[i]][predict(tree,x).pred]++);
+  let ok=0; for(let k=0;k<3;k++) ok+=cm[k][k];
+  const acc=ok/Xte.length;
+  // high risk recall (the most important number for safety)
+  const hiTot=cm[2].reduce((a,b)=>a+b,0)||1;
+  const hiRecall=cm[2][2]/hiTot;
+  const leaves=countLeaves(tree);
+  const ms=Math.round((typeof performance!=='undefined'?performance.now():Date.now())-t0);
+  return {tree,importance,cm,acc,hiRecall,leaves,ms,nTrain:Xtr.length,nTest:Xte.length};
+}
+function countLeaves(n){return n.leaf?1:countLeaves(n.left)+countLeaves(n.right)}
+
+function predict(tree,x){
+  const path=[]; let node=tree;
+  while(!node.leaf){
+    const goLeft=x[node.f]<=node.thr;
+    path.push({f:node.f,thr:node.thr,goLeft,value:x[node.f]});
+    node=goLeft?node.left:node.right;
+  }
+  const probs=node.counts.map(c=>c/node.n);
+  let pred=0; for(let k=1;k<3;k++) if(node.counts[k]>node.counts[pred]) pred=k;
+  return {pred,probs,path,leaf:node};
+}
+// ML-END
+
+// ---------- UI ----------
+if(typeof document!=='undefined'){
+const $=id=>document.getElementById(id);
+const state={}; FEATURES.forEach(f=>state[f.key]=f.def);
+let model=null;
+
+function buildControls(){
+  const fields=$('fields'), toggles=$('toggles');
+  FEATURES.forEach(f=>{
+    if(f.bool){
+      const d=document.createElement('div');
+      d.className='tog'; d.id='tog_'+f.key;
+      d.innerHTML=`<span>${f.label}</span><span class="sw"></span>`;
+      d.onclick=()=>{state[f.key]=state[f.key]?0:1;sync();update()};
+      toggles.appendChild(d);
+    }else{
+      const d=document.createElement('div'); d.className='field';
+      d.innerHTML=`<div class="row"><span>${f.label}</span><span class="val"><span id="v_${f.key}"></span><small>${f.unit}</small></span></div>
+      <input type="range" id="r_${f.key}" min="${f.min}" max="${f.max}" step="${f.step}">`;
+      fields.appendChild(d);
+      d.querySelector('input').oninput=e=>{state[f.key]=parseFloat(e.target.value);sync();update()};
+    }
+  });
+}
+function sync(){
+  FEATURES.forEach(f=>{
+    if(f.bool) $('tog_'+f.key).classList.toggle('on',!!state[f.key]);
+    else{
+      $('r_'+f.key).value=state[f.key];
+      $('v_'+f.key).textContent=f.step<1?state[f.key].toFixed(1):state[f.key];
+    }
+  });
+}
+const PRESETS={
+  healthy :{age:32,temp:36.7,hr:72,rr:15,spo2:98,sbp:118,alert:1,chest:0},
+  moderate:{age:58,temp:38.4,hr:104,rr:18,spo2:94,sbp:108,alert:1,chest:0},
+  critical:{age:71,temp:39.4,hr:128,rr:28,spo2:89,sbp:88,alert:0,chest:1}
+};
+document.querySelectorAll('.presets button').forEach(b=>{
+  b.onclick=()=>{Object.assign(state,PRESETS[b.dataset.p]);sync();update()};
+});
+
+function fmtStep(p){
+  const f=FEATURES[p.f];
+  if(f.bool){
+    const yes=p.value===1;
+    return `${f.label}: <b>${yes?'yes':'no'}</b>`;
+  }
+  const v=f.step<1?p.value.toFixed(1):p.value;
+  const t=Math.abs(p.thr)<10?p.thr.toFixed(1):Math.round(p.thr);
+  return `${f.label} is <b>${v}${f.unit}</b>, ${p.goLeft?'at or below':'above'} ${t}`;
+}
+
+function update(){
+  if(!model) return;
+  const x=FEATURES.map(f=>state[f.key]);
+  const r=predict(model.tree,x);
+  const L=LEVELS[r.pred];
+  const risk=Math.round((r.probs[1]*0.5+r.probs[2])*100);
+  const arc=$('arc');
+  arc.style.stroke=L.color;
+  arc.style.strokeDashoffset=351.86*(1-risk/100);
+  $('score').textContent=risk;
+  $('level').textContent=L.name; $('level').style.color=L.color;
+  $('action').textContent=L.action;
+  $('probs').innerHTML=LEVELS.map((l,i)=>`<div class="b"><span class="n">${l.name.split(' ')[0]}</span><div class="t"><i style="width:${(r.probs[i]*100).toFixed(0)}%;background:${l.color}"></i></div><span class="p">${(r.probs[i]*100).toFixed(0)}%</span></div>`).join('');
+  let steps=r.path.map(p=>`<li>${fmtStep(p)}</li>`).join('');
+  steps+=`<li class="end" style="--c:${L.color}">Reached a group of <b>${r.leaf.n}</b> similar training cases. Result: <b style="color:${L.color}">${L.name}</b></li>`;
+  $('path').innerHTML=steps;
+}
+
+function renderModel(){
+  const order=model.importance.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(a=>a[0]>0.005).slice(0,6);
+  $('imp').innerHTML=order.map(([v,i])=>`<div class="b"><span class="n" style="width:110px">${FEATURES[i].label}</span><div class="t"><i style="width:${(v*100/order[0][0]).toFixed(0)}%"></i></div><span class="p">${(v*100).toFixed(0)}%</span></div>`).join('');
+  $('stats').innerHTML=[
+    [(model.acc*100).toFixed(1)+'%','Overall accuracy'],
+    [(model.hiRecall*100).toFixed(1)+'%','High risk caught'],
+    [model.leaves,'Decision rules'],
+    [model.nTrain.toLocaleString(),'Training cases']
+  ].map(([a,b])=>`<div class="stat"><b>${a}</b><span>${b}</span></div>`).join('');
+  const names=['Low','Medium','High'];
+  let h='<div class="h"></div>'+names.map(n=>`<div class="h">Pred ${n}</div>`).join('');
+  for(let i=0;i<3;i++){
+    h+=`<div class="h">True ${names[i]}</div>`;
+    for(let j=0;j<3;j++) h+=`<div style="${i===j?'background:rgba(61,220,151,.18)':''}">${model.cm[i][j]}</div>`;
+  }
+  $('cm').innerHTML=h;
+  $('trainPill').innerHTML=`Model trained in your browser in <b>${model.ms} ms</b>`;
+}
+
+buildControls(); sync();
+setTimeout(()=>{model=trainModel();renderModel();update()},30);
+}
+</script>
+</body>
+</html>
